@@ -1,7 +1,6 @@
-from selenium import webdriver
-from pprint import pprint
 import json
 
+from selenium import webdriver
 
 if __name__ == "__main__":
     driver = webdriver.Firefox("/usr/local/bin/")
@@ -14,10 +13,14 @@ if __name__ == "__main__":
         if "__APOLLO_STATE__" in line:
             state = line.split(" = ")[1]
 
-    # cut unrelated category state content and close of to form proper json
-    domains = state.split("$ROOT_QUERY.DomainsV1Resource.getAll")[0]
-    categories = domains[:-2] + "}"
+    # cut unrelated category content and seal json correctly
+    categories = state.split("$ROOT_QUERY.DomainsV1Resource.getAll")[0]
+    categories = categories[:-2] + "}"
+    categories = json.loads(categories)
 
-    pprint(json.loads(categories))
+    # create mapping of domain-ids and sub domains
+    for category in categories:
+        if "SubdomainsV1:" in category:
+            print("{}/{}".format(categories[category]["domainId"], category[13:]))
 
     driver.close()
