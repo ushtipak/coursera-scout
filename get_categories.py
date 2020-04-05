@@ -1,3 +1,9 @@
+"""
+Create a list of Coursera categories from Apollo state retrieved with Selenium
+
+Categories are saved to `coursera-categories.txt`
+"""
+
 import json
 
 from selenium import webdriver
