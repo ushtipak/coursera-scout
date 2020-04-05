@@ -1,6 +1,7 @@
 from selenium import webdriver
 from time import sleep
 import logging
+import mappings
 
 driver = webdriver.Firefox("/usr/local/bin/")
 
@@ -13,7 +14,7 @@ categories = [
 
 def get_number_of_pages(category):
     """Return number of pages with course results from given category."""
-    url = " https://www.coursera.org/browse/{}?page=2".format(category)
+    url = "https://www.coursera.org/browse/{}?page=2".format(category)
     logging.debug("url: {}".format(url))
     driver.get(url)
     sleep(7.8)
