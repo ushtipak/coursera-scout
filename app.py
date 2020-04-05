@@ -1,15 +1,11 @@
-from selenium import webdriver
-from time import sleep
 import logging
+from time import sleep
+
+from selenium import webdriver
+
 import mappings
 
 driver = webdriver.Firefox("/usr/local/bin/")
-
-categories = [
-    "arts-and-humanities/history",
-    "arts-and-humanities/music-and-art",
-    "arts-and-humanities/philosophy"
-]
 
 
 def get_number_of_pages(category):
@@ -33,6 +29,9 @@ def get_number_of_pages(category):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING)
+
+    with open("coursera-categories.txt", "r") as f:
+        categories = f.read().splitlines()
 
     for category in categories:
         print("{}: {} pages".format(category, get_number_of_pages(category)))
