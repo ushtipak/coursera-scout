@@ -18,9 +18,10 @@ if __name__ == "__main__":
     categories = categories[:-2] + "}"
     categories = json.loads(categories)
 
-    # create mapping of domain-ids and sub domains
-    for category in categories:
-        if "SubdomainsV1:" in category:
-            print("{}/{}".format(categories[category]["domainId"], category[13:]))
+    # save mapping of domain-ids and sub domains
+    with open("coursera-categories.txt", "w") as f:
+        for category in categories:
+            if "SubdomainsV1:" in category:
+                f.write("{}/{}\n".format(categories[category]["domainId"], category[13:]))
 
     driver.close()
