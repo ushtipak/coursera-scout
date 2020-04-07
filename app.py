@@ -1,3 +1,4 @@
+import csv
 import logging
 from time import sleep
 
@@ -8,9 +9,9 @@ import mappings
 driver = webdriver.Firefox("/usr/local/bin/")
 
 
-def get_number_of_pages(cat):
+def get_number_of_pages(_category):
     """Return number of pages with course results from given category."""
-    url = "https://www.coursera.org/browse/{}?page=2".format(cat)
+    url = "https://www.coursera.org/browse/{}?page=2".format(_category)
     logging.debug("url: {}".format(url))
     driver.get(url)
     sleep(7.8)
@@ -27,9 +28,9 @@ def get_number_of_pages(cat):
     return max_num
 
 
-def get_details_from_page(_category, page):
-    driver.get("https://www.coursera.org/browse/{}?page={}".format(_category, page))
-    sleep(5.1)
+def get_details_from_page(_category, _page):
+    driver.get("https://www.coursera.org/browse/{}?page={}".format(_category, _page))
+    sleep(6.1)
 
     titles = []
     for element in driver.find_elements_by_class_name(mappings.CLASS_TITLE):
@@ -41,15 +42,28 @@ def get_details_from_page(_category, page):
     universities = universities[2:]
 
     links = []
-    print("*" * 10)
-    for element in driver.find_elements_by_class_name(mappings.CLASS_LINKS):
+    form = []
+    for element in driver.find_elements_by_class_name(mappings.CLASS_DETAILS):
         links.append(element.get_attribute("href"))
-        print(element.text)
-    print("*" * 10)
+        details = element.text
+        if "COURSE" in details:
+            form.append("course")
+        elif "SPECIALIZATION" in details:
+            form.append("specialization")
+        else:
+            form.append("not specified")
 
     _courses = []
     for i in range(10):
-        _courses.append({"title": titles[i], "university": universities[i], "link": links[i], "category": _category})
+        _courses.append(
+            {
+                "title": titles[i],
+                "university": universities[i],
+                "form": form[i],
+                "link": links[i],
+                "category": _category
+            }
+        )
 
     return _courses
 
@@ -60,13 +74,15 @@ if __name__ == "__main__":
     with open("coursera-categories.txt", "r") as f:
         categories = f.read().splitlines()
 
-    courses = []
     for category in categories:
-        # print("{}: {} pages".format(category, get_number_of_pages(category)))
-        courses.append(get_details_from_page("physical-science-and-engineering/electrical-engineering", 2))
+        print("DEBUG [category] == [{}]".format(category))
+        courses = []
+        pages = get_number_of_pages(category)
+        print("DEBUG [pages] == [{}]".format(pages))
+        for page in range(2, pages + 1):
+            courses.append(get_details_from_page(category, page))
 
-    print(courses)
+        print("{}: {}".format(category, courses))
 
     driver.close()
-
 
