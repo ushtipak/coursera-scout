@@ -84,7 +84,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     # load category list if exits
-    category_list = "coursera-categories.txt"
+    category_list = "results/all-categories"
     if not os.path.isfile(category_list):
         logging.error("category_list \"{}\" not found!".format(category_list))
         exit(1)
