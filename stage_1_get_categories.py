@@ -1,10 +1,9 @@
 """
-Create a list of Coursera categories from Apollo state retrieved with Selenium
-
-Categories are saved to `coursera-categories.txt`
+Create a list of Coursera categories from Apollo state retrieved with Selenium (results/all-categories)
 """
 
 import json
+import os
 
 from selenium import webdriver
 
@@ -25,7 +24,9 @@ if __name__ == "__main__":
     categories = json.loads(categories)
 
     # save mapping of domain-ids and sub domains
-    with open("coursera-categories.txt", "w") as f:
+    if not os.path.exists("results"):
+        os.makedirs("results")
+    with open("results/all-categories", "w") as f:
         for category in categories:
             if "SubdomainsV1:" in category:
                 f.write("{}/{}\n".format(categories[category]["domainId"], category[13:]))
