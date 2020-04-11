@@ -1,5 +1,5 @@
 """
-Fetch info on all coursers  a list of Coursera  (results/courses)
+Create CSVs with title, university, type and tier for all courses from all retrieved categories
 """
 
 import csv
@@ -18,7 +18,7 @@ driver = webdriver.Firefox("/usr/local/bin/")
 
 
 def get_number_of_pages(_category):
-    """Return total number of pages with course results from given category."""
+    """Return total number of pages for given category."""
     logging.info("calling get_number_of_pages for \"{}\"".format(_category))
     url = "https://www.coursera.org/browse/{}?page=2".format(_category)
     logging.info("url: {}".format(url))
