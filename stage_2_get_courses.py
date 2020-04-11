@@ -1,3 +1,7 @@
+"""
+Fetch info on all coursers  a list of Coursera  (results/courses)
+"""
+
 import csv
 import logging
 import os
@@ -9,7 +13,6 @@ CLASS_PAGES = "Box_120drhm-o_O-centerJustify_1nezfbd-o_O-centerAlign_19zvu2s-o_O
 CLASS_TITLE = "card-title"
 CLASS_UNIVERSITY = "partner-name"
 CLASS_DETAILS = "browse-result-card"
-
 
 driver = webdriver.Firefox("/usr/local/bin/")
 
@@ -93,8 +96,8 @@ if __name__ == "__main__":
 
     # prepare output dir and header for csv files
     field_names = ["title", "university", "form", "link", "category"]
-    if not os.path.exists("courses"):
-        os.makedirs("courses")
+    if not os.path.exists("results/courses"):
+        os.makedirs("results/courses")
 
     # process each category in list:
     # - get total number of pages
@@ -108,7 +111,7 @@ if __name__ == "__main__":
                 courses.append(course)
 
         try:
-            with open("courses/{}.csv".format(category.replace("/", "---")), 'w') as f:
+            with open("results/courses/{}.csv".format(category.replace("/", "---")), 'w') as f:
                 writer = csv.DictWriter(f, fieldnames=field_names)
                 writer.writeheader()
                 for course in courses:
