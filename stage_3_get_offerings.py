@@ -43,6 +43,17 @@ def get_course_offering(_url):
     driver.find_elements_by_class_name("EnrollButton")[0].click()
     sleep(2.2)
 
+    logging.info("check if course is part of multiple specializations ...")
+    is_unique = True
+    try:
+        choose_specialization = driver.find_element_by_id("course_enroll_s12n_selection_button_button")
+        is_unique = False
+        choose_specialization.click()
+    except NoSuchElementException:
+        pass
+    logging.info("is_unique: %s" % is_unique)
+    sleep(1.1)
+
     logging.info("check if course is completely free ...")
     is_free = False
     try:
@@ -53,7 +64,7 @@ def get_course_offering(_url):
     except NoSuchElementException:
         pass
     logging.info("is_free: %s" % is_free)
-    sleep(1.1)
+    sleep(1.3)
 
     logging.info("check if one can audit the course ...")
     is_auditable = False
@@ -70,9 +81,15 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     login(email, password)
 
-    get_course_offering("https://www.coursera.org/learn/science-of-meditation")
-    get_course_offering("https://www.coursera.org/learn/egypt")
-    get_course_offering("https://www.coursera.org/learn/introcss")
-    get_course_offering("https://www.coursera.org/learn/javascript")
+    # examples of completely free courses
+    # get_course_offering("https://www.coursera.org/learn/science-of-meditation")
+    # get_course_offering("https://www.coursera.org/learn/egypt")
+
+    # examples of courses that aren't free, but can be audited
+    # get_course_offering("https://www.coursera.org/learn/introcss")
+    # get_course_offering("https://www.coursera.org/learn/javascript")
+
+    # example of course that is part of multiple specializations
+    get_course_offering("https://www.coursera.org/learn/bootstrap-4")
 
     driver.close()
