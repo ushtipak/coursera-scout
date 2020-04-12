@@ -51,7 +51,8 @@ def get_course_offering(_url):
         choose_specialization.click()
     except NoSuchElementException:
         pass
-    logging.info("is_unique: %s" % is_unique)
+    if not is_unique:
+        logging.info("MULTIPLE SPECIALIZATIONS")
     sleep(1.1)
 
     logging.info("check if course is completely free ...")
@@ -63,18 +64,23 @@ def get_course_offering(_url):
                 is_free = True
     except NoSuchElementException:
         pass
-    logging.info("is_free: %s" % is_free)
     sleep(1.3)
 
-    logging.info("check if one can audit the course ...")
-    is_auditable = False
-    try:
-        driver.find_element_by_id("enroll_subscribe_audit_button")
-        is_auditable = True
-    except NoSuchElementException:
-        pass
-    logging.info("is_auditable: %s" % is_auditable)
-    sleep(1.2)
+    if is_free:
+        logging.info("COURSE IS FREE !!!")
+    else:
+        logging.info("check if one can audit the course ...")
+        is_auditable = False
+        try:
+            driver.find_element_by_id("enroll_subscribe_audit_button")
+            is_auditable = True
+        except NoSuchElementException:
+            pass
+        if is_auditable:
+            logging.info("COURSE IS AT LEAST AUDITABLE !!!")
+        else:
+            logging.info("closed af :(")
+        sleep(1.2)
 
 
 if __name__ == "__main__":
@@ -90,6 +96,17 @@ if __name__ == "__main__":
     # get_course_offering("https://www.coursera.org/learn/javascript")
 
     # example of course that is part of multiple specializations
-    get_course_offering("https://www.coursera.org/learn/bootstrap-4")
+    # get_course_offering("https://www.coursera.org/learn/bootstrap-4")
+
+    get_course_offering("https://www.coursera.org/learn/praktiki-raboty-dannymi-sredstvami-power-query-pivot")
+    get_course_offering("https://www.coursera.org/learn/detecting-cyber-attacks")
+    get_course_offering("https://www.coursera.org/learn/financing-infrastructure-in-african-cities")
+    get_course_offering("https://www.coursera.org/learn/nonprofit-gov-capstone")
+    get_course_offering("https://www.coursera.org/learn/intro-redes-sociales")
+    get_course_offering("https://www.coursera.org/learn/image-processing")
+    get_course_offering("https://www.coursera.org/learn/cennye-bumagi-pravovoe-regulirovanie")
+    get_course_offering("https://www.coursera.org/learn/basic-sentiment-analysis-tensorflow")
+    get_course_offering("https://www.coursera.org/learn/game-theory-1")
+    get_course_offering("https://www.coursera.org/learn/web-design-strategy")
 
     driver.close()
