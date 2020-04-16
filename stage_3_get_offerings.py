@@ -1,3 +1,7 @@
+"""
+Save fare and other retrieved fields for each course to a DB (results/offerings)
+"""
+
 import csv
 import logging
 import os
