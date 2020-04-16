@@ -2,14 +2,17 @@
 Save fare and other retrieved fields for each course to a DB (results/offerings)
 """
 
+# pylint: disable=invalid-name
+
 import csv
 import logging
 import os
 import sqlite3
+import sys
 from time import sleep
 
 from selenium import webdriver
-from selenium.common.exceptions import *
+from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
 
 driver = webdriver.Firefox("/usr/local/bin/")
 
@@ -18,16 +21,21 @@ password = "https://www.selenium.dev/downloads/"
 
 
 def init_db():
+    """Return DB connection (and create table if it doesn't exist)."""
     _conn = sqlite3.connect('results/offerings.db')
-    _conn.execute('''CREATE TABLE IF NOT EXISTS offerings
-                     (link TEXT PRIMARY KEY, title TEXT, university TEXT, category TEXT, fare INTEGER)''')
+    _conn.execute('''CREATE TABLE IF NOT EXISTS offerings (
+                     link TEXT PRIMARY KEY,
+                     title TEXT,
+                     university TEXT,
+                     category TEXT,
+                     fare INTEGER)''')
     _conn.commit()
     return _conn
 
 
 def login(_email, _password):
     """Sign in with provided credentials."""
-    logging.info("calling login with email \"{}\"".format(_email))
+    logging.info("calling login with email \"%s\"", _email)
     driver.get("https://www.coursera.org")
     sleep(6.3)
 
@@ -51,7 +59,7 @@ def login(_email, _password):
 def get_course_offering(_course):
     """Get course details (is it free, auditable or pay only) and save to DB."""
     link = _course['link']
-    logging.info("calling get_course_offering with url \"{}\"".format(link))
+    logging.info("calling get_course_offering with url \"%s\"", link)
 
     scanned = conn.execute('SELECT * FROM offerings WHERE link=?', (link,)).fetchone()
     if scanned is None:
@@ -67,13 +75,14 @@ def get_course_offering(_course):
             logging.info("check if course is part of multiple specializations ...")
             is_unique = True
             try:
-                choose_specialization = driver.find_element_by_id("course_enroll_s12n_selection_button_button")
+                choose_specialization = driver.find_element_by_id(
+                    "course_enroll_s12n_selection_button_button")
                 is_unique = False
                 choose_specialization.click()
             except NoSuchElementException:
                 logging.info("course is unique!")
             if not is_unique:
-                logging.info("course IS part of multiple specializations, one selected to proceed ...")
+                logging.info("course is in multiple specializations, one selected ...")
             sleep(1.1)
 
             logging.info("check if course is completely free ...")
@@ -127,7 +136,8 @@ def get_course_offering(_course):
                             fare = 2
                 sleep(1.2)
 
-            conn.execute("""INSERT INTO offerings (link, title, university, category, fare) VALUES (?, ?, ?, ?, ?)""",
+            conn.execute("""INSERT INTO offerings (
+                            link, title, university, category, fare) VALUES (?, ?, ?, ?, ?)""",
                          (link, _course['title'], _course['university'], _course['category'], fare))
             conn.commit()
 
@@ -145,15 +155,15 @@ if __name__ == "__main__":
     # ensure course records exist
     records = "results/courses"
     if not os.path.isdir(records):
-        logging.error("directory \"{}\" not found!".format(records))
-        exit(1)
+        logging.error("directory \"%s\" not found!", records)
+        sys.exit(1)
 
     conn = init_db()
 
     # process each course in each category
     for category in os.listdir(records):
         if category.endswith(".csv"):
-            logging.info("processing category \"{}\"".format(category))
+            logging.info("processing category \"%s\"", category)
             with open(os.path.join(records, category), newline='') as courses:
                 reader = csv.DictReader(courses)
                 for course in reader:
