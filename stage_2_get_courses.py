@@ -2,14 +2,20 @@
 Create CSVs with title, university, type and tier for all courses from all retrieved categories
 """
 
+# pylint: disable=invalid-name
+
 import csv
 import logging
 import os
+import sys
 from time import sleep
 
 from selenium import webdriver
 
-CLASS_PAGES = "Box_120drhm-o_O-centerJustify_1nezfbd-o_O-centerAlign_19zvu2s-o_O-displayflex_poyjc"
+CLASS_PAGES = "_1lutnh9y"
+# class names are obfuscated with, preserving previous, commented
+# CLASS_PAGES = \
+# "Box_120drhm-o_O-centerJustify_1nezfbd-o_O-centerAlign_19zvu2s-o_O-displayflex_poyjc"
 CLASS_TITLE = "card-title"
 CLASS_UNIVERSITY = "partner-name"
 CLASS_DETAILS = "browse-result-card"
@@ -19,9 +25,9 @@ driver = webdriver.Firefox("/usr/local/bin/")
 
 def get_number_of_pages(_category):
     """Return total number of pages for given category."""
-    logging.info("calling get_number_of_pages for \"{}\"".format(_category))
+    logging.info("calling get_number_of_pages for \"%s\"", _category)
     url = "https://www.coursera.org/browse/{}?page=2".format(_category)
-    logging.info("url: {}".format(url))
+    logging.info("url: %s", url)
     driver.get(url)
     sleep(7.8)
 
@@ -34,15 +40,15 @@ def get_number_of_pages(_category):
     if len(nums) > 0:
         max_num = max(nums)
 
-    logging.info("return from get_number_of_pages: {}".format(max_num))
+    logging.info("return from get_number_of_pages: %s", max_num)
     return max_num
 
 
 def get_details_from_page(_category, _page):
     """Return all info on courses from given page."""
-    logging.info("calling get_details_from_page for \"{}\", page: {}".format(_category, _page))
+    logging.info("calling get_details_from_page for \"%s\", page: %s", _category, _page)
     url = "https://www.coursera.org/browse/{}?page={}".format(_category, _page)
-    logging.info("url: {}".format(url))
+    logging.info("url: %s", url)
     driver.get(url)
     sleep(6.1)
 
@@ -68,7 +74,7 @@ def get_details_from_page(_category, _page):
             form.append("not specified")
 
     _courses = []
-    for i in range(len(titles)):
+    for i, _ in enumerate(titles):
         _courses.append(
             {
                 "title": titles[i],
@@ -79,7 +85,7 @@ def get_details_from_page(_category, _page):
             }
         )
 
-    logging.info("return from get_details_from_page: {}".format(_courses))
+    logging.info("return from get_details_from_page: %s", _courses)
     return _courses
 
 
@@ -89,8 +95,8 @@ if __name__ == "__main__":
     # load category list if exits
     category_list = "results/all-categories"
     if not os.path.isfile(category_list):
-        logging.error("category_list \"{}\" not found!".format(category_list))
-        exit(1)
+        logging.error("category_list \"%s\" not found!", category_list)
+        sys.exit(1)
     with open(category_list, "r") as f:
         categories = f.read().splitlines()
 
@@ -116,8 +122,8 @@ if __name__ == "__main__":
                 writer.writeheader()
                 for course in courses:
                     writer.writerow(course)
-        except IOError as e:
-            logging.error("IOError [{}]".format(e))
-            exit(2)
+        except IOError as exception:
+            logging.error("IOError [%s]", exception)
+            sys.exit(2)
 
     driver.close()
