@@ -153,15 +153,12 @@ if __name__ == "__main__":
     # ...
     for category in os.listdir(records):
         if category.endswith(".csv"):
-            # if category.endswith("life-sciences---animal-health.csv"):
             logging.info("processing category \"{}\"".format(category))
             with open(os.path.join(records, category), newline='') as courses:
                 reader = csv.DictReader(courses)
                 for course in reader:
                     if course['form'] == "course":
                         get_course_offering(course)
-                        # if course['link'] == "https://www.coursera.org/learn/global-disease-non-communicable":
-                        #     get_course_offering(course)
 
     conn.close()
     driver.close()
