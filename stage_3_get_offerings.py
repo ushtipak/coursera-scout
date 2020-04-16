@@ -49,7 +49,7 @@ def login(_email, _password):
 
 
 def get_course_offering(_course):
-    """...."""
+    """Get course details (is it free, auditable or pay only) and save to DB."""
     link = _course['link']
     logging.info("calling get_course_offering with url \"{}\"".format(link))
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     login(email, password)
 
-    # ...
+    # ensure course records exist
     records = "results/courses"
     if not os.path.isdir(records):
         logging.error("directory \"{}\" not found!".format(records))
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     conn = init_db()
 
-    # ...
+    # process each course in each category
     for category in os.listdir(records):
         if category.endswith(".csv"):
             logging.info("processing category \"{}\"".format(category))
