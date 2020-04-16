@@ -1,6 +1,8 @@
 """
-Create a list of Coursera categories from Apollo state retrieved with Selenium (results/all-categories)
+Retrieve Coursera categories from Apollo state retrieved with Selenium (results/all-categories)
 """
+
+# pylint: disable=invalid-name
 
 import json
 import os
@@ -12,6 +14,7 @@ if __name__ == "__main__":
     driver.get("https://www.coursera.org")
     html = driver.page_source
 
+    # retrieve raw state of apollo-client embedded in page
     state = ""
     lines = html.split("\n")
     for line in lines:
