@@ -1,4 +1,7 @@
+import csv
 import logging
+import os
+import sqlite3
 from time import sleep
 
 from selenium import webdriver
@@ -8,6 +11,14 @@ driver = webdriver.Firefox("/usr/local/bin/")
 
 email = "lhbpujoqyhwzwxtaxp@ttirv.com"
 password = "https://www.selenium.dev/downloads/"
+
+
+def init_db():
+    _conn = sqlite3.connect('results/offerings.db')
+    _conn.execute('''CREATE TABLE IF NOT EXISTS offerings
+                     (link TEXT PRIMARY KEY, title TEXT, university TEXT, category TEXT, fare INTEGER)''')
+    _conn.commit()
+    return _conn
 
 
 def login(_email, _password):
@@ -33,80 +44,120 @@ def login(_email, _password):
     sleep(6.4)
 
 
-def get_course_offering(_url):
+def get_course_offering(_course):
     """...."""
-    logging.info("calling get_course_offering with url \"{}\"".format(_url))
-    driver.get(_url)
-    sleep(4.7)
+    link = _course['link']
+    logging.info("calling get_course_offering with url \"{}\"".format(link))
 
-    logging.info("click on enroll ...")
-    driver.find_elements_by_class_name("EnrollButton")[0].click()
-    sleep(2.2)
+    scanned = conn.execute('SELECT * FROM offerings WHERE link=?', (link,)).fetchone()
+    if scanned is None:
+        # course wasn't checked before, load it up
+        driver.get(link)
+        sleep(4.7)
 
-    logging.info("check if course is part of multiple specializations ...")
-    is_unique = True
-    try:
-        choose_specialization = driver.find_element_by_id("course_enroll_s12n_selection_button_button")
-        is_unique = False
-        choose_specialization.click()
-    except NoSuchElementException:
-        pass
-    if not is_unique:
-        logging.info("MULTIPLE SPECIALIZATIONS")
-    sleep(1.1)
-
-    logging.info("check if course is completely free ...")
-    is_free = False
-    try:
-        h4s = driver.find_elements_by_tag_name("h4")
-        for h4 in h4s:
-            if "Full Course, No Certificate" in h4.text:
-                is_free = True
-    except NoSuchElementException:
-        pass
-    sleep(1.3)
-
-    if is_free:
-        logging.info("COURSE IS FREE !!!")
-    else:
-        logging.info("check if one can audit the course ...")
-        is_auditable = False
+        logging.info("click on enroll ...")
         try:
-            driver.find_element_by_id("enroll_subscribe_audit_button")
-            is_auditable = True
-        except NoSuchElementException:
-            pass
-        if is_auditable:
-            logging.info("COURSE IS AT LEAST AUDITABLE !!!")
-        else:
-            logging.info("closed af :(")
-        sleep(1.2)
+            driver.find_elements_by_class_name("EnrollButton")[0].click()
+            sleep(2.2)
+
+            logging.info("check if course is part of multiple specializations ...")
+            is_unique = True
+            try:
+                choose_specialization = driver.find_element_by_id("course_enroll_s12n_selection_button_button")
+                is_unique = False
+                choose_specialization.click()
+            except NoSuchElementException:
+                logging.info("course is unique!")
+            if not is_unique:
+                logging.info("course IS part of multiple specializations, one selected to proceed ...")
+            sleep(1.1)
+
+            logging.info("check if course is completely free ...")
+            is_free = False
+            try:
+                h4s = driver.find_elements_by_tag_name("h4")
+                for h4 in h4s:
+                    if "Full Course, No Certificate" in h4.text:
+                        is_free = True
+            except NoSuchElementException:
+                pass
+            sleep(1.3)
+
+            if is_free:
+                logging.info("course is free \\o/ :)")
+                fare = 0
+
+            # proceed only if course is not free
+            else:
+                logging.info("check if one can audit the course ...")
+                is_auditable = False
+
+                # most courses have a sublime link "audit only" link
+                try:
+                    driver.find_element_by_id("enroll_subscribe_audit_button")
+                    is_auditable = True
+                except NoSuchElementException:
+                    pass
+
+                if is_auditable:
+                    logging.info("course is auditable :)")
+                    fare = 1
+
+                # if course is not auditable with the link, check if there is same enroll option
+                else:
+                    # some courses have audit option in primary-description
+                    is_alternatively_auditable = False
+                    try:
+                        h4s = driver.find_elements_by_tag_name("h4")
+                        for h4 in h4s:
+                            if "Audit only" in h4.text:
+                                is_alternatively_auditable = True
+                    except NoSuchElementException:
+                        pass
+                    finally:
+                        if is_alternatively_auditable:
+                            logging.info("course is auditable :)")
+                            fare = 1
+                        else:
+                            logging.info("course is pay only :(")
+                            fare = 2
+                sleep(1.2)
+
+            conn.execute("""INSERT INTO offerings (link, title, university, category, fare) VALUES (?, ?, ?, ?, ?)""",
+                         (link, _course['title'], _course['university'], _course['category'], fare))
+            conn.commit()
+
+        except ElementNotInteractableException:
+            logging.info("there are no upcoming sessions available ...")
+
+    else:
+        logging.info("course already scanned ...")
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     login(email, password)
 
-    # examples of completely free courses
-    # get_course_offering("https://www.coursera.org/learn/science-of-meditation")
-    # get_course_offering("https://www.coursera.org/learn/egypt")
+    # ...
+    records = "results/courses"
+    if not os.path.isdir(records):
+        logging.error("directory \"{}\" not found!".format(records))
+        exit(1)
 
-    # examples of courses that aren't free, but can be audited
-    # get_course_offering("https://www.coursera.org/learn/introcss")
-    # get_course_offering("https://www.coursera.org/learn/javascript")
+    conn = init_db()
 
-    # example of course that is part of multiple specializations
-    # get_course_offering("https://www.coursera.org/learn/bootstrap-4")
+    # ...
+    for category in os.listdir(records):
+        if category.endswith(".csv"):
+            # if category.endswith("life-sciences---animal-health.csv"):
+            logging.info("processing category \"{}\"".format(category))
+            with open(os.path.join(records, category), newline='') as courses:
+                reader = csv.DictReader(courses)
+                for course in reader:
+                    if course['form'] == "course":
+                        get_course_offering(course)
+                        # if course['link'] == "https://www.coursera.org/learn/global-disease-non-communicable":
+                        #     get_course_offering(course)
 
-    get_course_offering("https://www.coursera.org/learn/praktiki-raboty-dannymi-sredstvami-power-query-pivot")
-    get_course_offering("https://www.coursera.org/learn/detecting-cyber-attacks")
-    get_course_offering("https://www.coursera.org/learn/financing-infrastructure-in-african-cities")
-    get_course_offering("https://www.coursera.org/learn/nonprofit-gov-capstone")
-    get_course_offering("https://www.coursera.org/learn/intro-redes-sociales")
-    get_course_offering("https://www.coursera.org/learn/image-processing")
-    get_course_offering("https://www.coursera.org/learn/cennye-bumagi-pravovoe-regulirovanie")
-    get_course_offering("https://www.coursera.org/learn/basic-sentiment-analysis-tensorflow")
-    get_course_offering("https://www.coursera.org/learn/game-theory-1")
-    get_course_offering("https://www.coursera.org/learn/web-design-strategy")
-
+    conn.close()
     driver.close()
